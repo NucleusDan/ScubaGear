@@ -102,7 +102,7 @@ tests[{
 }] {
 	Policy := input.meeting_policies[_]
 	# This control specifically states that non-global policies MAY be different, so filter for the global policy
-	Policy.Identity = "Global"
+	Policy.Identity == "Global"
 	Conditions := [Policy.AutoAdmittedUsers != "Everyone", Policy.AllowPSTNUsersToBypassLobby == false]
     Status := count([Condition | Condition = Conditions[_]; Condition == false]) == 0
 }

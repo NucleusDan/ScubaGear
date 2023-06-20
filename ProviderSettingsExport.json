@@ -1,0 +1,16 @@
+﻿        {
+                "baseline_version": "0.1",
+                "module_version": "0.3.0",
+                "date": "06/14/2023 14:43:28 Eastern Daylight Time",
+                "tenant_details": [
+    {
+        "AADAdditionalData":  "Error retrieving additional data",
+        "TenantId":  "Error retrieving Tenant ID",
+        "DisplayName":  "Error retrieving Display name",
+        "DomainName":  "Error retrieving Domain name"
+    }
+],
+                "scuba_config": {},
+
+                
+        }
