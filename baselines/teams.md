@@ -346,7 +346,8 @@ organization](https://docs.microsoft.com/en-us/microsoftteams/manage-external-ac
     2.  Clear the check next to **External users with Teams accounts not managed by an organization can contact users in my organization**.
 
 ## 6. Skype Users
-Microsoft is officially retiring Skype for Business Online and wants to ensure customers have the required information and resources to plan and execute a successful upgrade to Teams. Below are the decommissioning dates by product:
+
+This section helps reduce security risks related to contact with Skype users. As Microsoft is officially retiring Skype for Business Online and wants to ensure customers have the required information and resources to plan and execute a successful upgrade to Teams. Below are the decommissioning dates by product:
 - Skype for Business Online: Jul 31, 2021
 - Skype for Business 2015: Apr 11, 2023
 - Skype for Business 2016: Oct 14, 2025
@@ -376,9 +377,9 @@ Blog](https://techcommunity.microsoft.com/t5/microsoft-teams-blog/skype-for-busi
 
 ### Implementation
 
-Instructions for *enabling* communications with Skype users are outlined
-in [Communicate with Skype
-users](https://docs.microsoft.com/en-us/microsoftteams/manage-external-access#communicate-with-skype-users).
+All of the settings in this section are configured in the **Microsoft Teams admin center**.
+
+#### MS.TEAMS.6.1v1, instructions:
 
 1.  Sign in to the **[Microsoft Teams admin
     center](https://admin.teams.microsoft.com).**
@@ -391,14 +392,7 @@ users](https://docs.microsoft.com/en-us/microsoftteams/manage-external-access#co
 4.  Click **Save**.
 
 ## 7. Teams Email Integration
-
-Teams provides an optional feature that allows channels to have an email
-address and receive email. These channel email addresses are not under
-the tenant’s domain; rather, they are associated with a Microsoft-owned
-domain, teams.ms. As such, although some basic checks are performed,
-agencies do not have control over the security settings associated with
-this email. For this reason, email channel integration should be
-disabled.
+This section helps reduce security risks related to teams email integration. Teams provides an optional feature that allows channels to have an email address and receive email.
 
 ### Policies
 #### MS.TEAMS.7.1v1
@@ -418,7 +412,9 @@ available in GCC or DoD tenants.
 
 ### Implementation
 
-To ensure that teams email integration is disabled:
+All of the settings in this section are configured in the **Microsoft Teams admin center**.
+
+#### MS.TEAMS.7.1v1, instructions:
 
 1.  Sign in to the **[Microsoft Teams admin
     center](https://admin.teams.microsoft.com).**
@@ -429,8 +425,7 @@ To ensure that teams email integration is disabled:
     emails to a channel email address** to **Off**.
 
 ## 8. App Management
-
-Teams is capable of integrating with the following classes of apps:
+This section helps reduce security risks related to app integration with Microsoft Teams. Teams is capable of integrating with the following classes of apps:
 
 *Microsoft apps*: apps published by Microsoft.
 
@@ -446,7 +441,6 @@ development, that users “sideload” into Teams.
 Agencies SHOULD allow all apps published by Microsoft in the Global (org-wide default) meeting policy and all custom policies.
 - _Rationale:_ TODO
 - _Last modified:_ July 2023
-- _Note:_ Custom policies MAY be created to allow more flexibility for specific users.
 
 #### MS.TEAMS.8.2v1
 Agencies SHOULD NOT allow installation of all third-party apps or custom apps in the Global (org-wide default) meeting policy and all custom policies.
@@ -473,7 +467,9 @@ Docs](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-a
 
 ### Implementation
 
-To restrict which Team apps can be installed:
+All of the settings in this section are configured in the **Microsoft Teams admin center**.
+
+#### MS.TEAMS.8.1v1, instructions:
 
 1.  Sign in to the **[Microsoft Teams admin
     center](https://admin.teams.microsoft.com).**
@@ -482,29 +478,40 @@ To restrict which Team apps can be installed:
 
 3.  Select **Global (Org-wide default)**.
 
-4.  Under **Microsoft apps**, select **Allow all apps**, unless specific
-    apps need to be disallowed, in which case select **Block specific
-    apps and allow all others**.
+4.  Under **Microsoft apps**, select **Allow all apps**
 
-5.  Set **Third-party apps** to **Block all apps**, unless specific apps
+5.  If custom policies have been created, repeat these steps for each
+    policy, selecting the appropriate policy in step 3.
+
+#### MS.TEAMS.8.2v1, instructions:
+
+1.  Sign in to the **[Microsoft Teams admin
+    center](https://admin.teams.microsoft.com).**
+
+2.  Select **Teams apps -**\> **Permission policies.**
+
+3.  Select **Global (Org-wide default)**.
+
+4.  Set **Third-party apps** to **Block all apps**, unless specific apps
     have been approved by the agency, in which case select **Allow
     specific apps and block all others**.
 
-6.  Set **Custom apps** to **Block all apps**, unless specific apps have
+5.  Set **Custom apps** to **Block all apps**, unless specific apps have
     been approved by the agency, in which case select **Allow specific
     apps and block all others**.
 
-7.  Click **Save**.
+6.  Click **Save**.
 
-8.  If custom policies have been created, repeat these steps for each
+7.  If custom policies have been created, repeat these steps for each
     policy, selecting the appropriate policy in step 3.
+
+#### MS.TEAMS.8.3v1, instructions:
+
+N/A
 
 ## 9. Cloud Recording of Teams Meetings
 
-This setting determines whether video can be recorded in meetings hosted
-by a user, during one-on-one calls, and on group calls started by a
-user. Agencies should comply with any other applicable policies or
-legislation in addition to this guidance.
+This section helps reduce security risks related to the cloud recording user permissions for Teams meetings. These user permissions apply to meetings hosted by a user, during one-on-one calls, and on group calls started by a user. Agencies should comply with any other applicable policies or legislation in addition to this guidance.
 
 ### Policies
 
@@ -533,7 +540,9 @@ Docs](https://docs.microsoft.com/en-us/microsoftteams/policy-assignment-overview
 
 ### Implementation
 
-To configure the Meeting policies for cloud video recording:
+All of the settings in this section are configured in the **Microsoft Teams admin center**.
+
+#### MS.TEAMS.9.1v1, instructions:
 
 1.  Sign in to the **[Microsoft Teams admin
     center](https://admin.teams.microsoft.com).**
@@ -563,30 +572,39 @@ record meetings:
 4.  Under the **Recording & transcription** section, set **Cloud
     recording** to **On**.
 
-5.  Under the **Recording & transcription** section, set **Store
-    recordings outside of your country or region** to **Off**.
+5.  Select **Save**.
 
-6.  Select **Save**.
-
-7.  After selecting **Save**, a table displays the set of policies.
+6.  After selecting **Save**, a table displays the set of policies.
     Select the row containing the new policy, then select **Manage
     users**.
 
-8.  Assign the users that need the ability to record to this policy.
+7.  Assign the users that need the ability to record to this policy.
 
-9.  Select **Apply**.
+8.  Select **Apply**.
+
+#### MS.TEAMS.9.2v1, instructions:
+
+1.  Sign in to the **[Microsoft Teams admin
+    center](https://admin.teams.microsoft.com).**
+
+2.  Select **Meetings** -\> **Meeting policies**.
+
+3.  Select the **Global (Org-wide default)** policy.
+   
+4.  Under the **Recording & transcription** section, set **Store
+    recordings outside of your country or region** to **Off**.
+
+5.  Select **Save**.
 
 ## 10. Recording of Live Events
-
-Live events are recorded by default. Agencies should increase their
-privacy by changing the policy so that events are only recorded at the
-organizer’s discretion.
+This section helps reduce security risks related to the recording user permissions for Live Events.
 
 ### Policies
 #### MS.TEAMS.10.1v1
 Record an event SHOULD be set to Organizer can record Global (org-wide default) meeting policy and all custom policies.
-- _Rationale:_ TODO
+- _Rationale:_ The security risk of the default settings for Live Events are that Live Events are avaialble to be recoreded by all participants by default. By limiting the recording permissions to only the organizer this minimizes the security risk to the organizer's discretion for these Live Events.
 - _Last modified:_ July 2023
+- _Note:_ Custom policies MAY be created to allow more flexibility for specific users.
 
 ### Resources
 
@@ -598,6 +616,10 @@ Docs](https://docs.microsoft.com/en-us/microsoftteams/teams-live-events/live-eve
 - N/A
 
 ### Implementation
+
+All of the settings in this section are configured in the **Microsoft Teams admin center**.
+
+#### MS.TEAMS.10.1v1, instructions:
 
 1.  Sign in to the **[Microsoft Teams admin
     center](https://admin.teams.microsoft.com).**
@@ -611,7 +633,7 @@ Docs](https://docs.microsoft.com/en-us/microsoftteams/teams-live-events/live-eve
 5.  Click **Save**.
 
 6.  If custom policies have been created, repeat these steps for each
-    policy, selecting the appropriate policy in step 4.
+    policy, selecting the appropriate policy in step 3.
 
 ## 11. Data Loss Prevention
 
