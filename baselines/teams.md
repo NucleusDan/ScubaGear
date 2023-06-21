@@ -371,7 +371,7 @@ This section helps reduce security risks related to contact with Skype users. As
 
 #### MS.TEAMS.6.1v1
 Contact with Skype users SHALL be blocked.
-- _Rationale:_ The security risk of allowing contact with skype users is aligned with the risk of contact with a retiring product and its current vulnerabilities. Microsoft is officailly retiring all forms of Skype as listed above. Through blocking contact with skype users an agency is limiting acess to the multitude of seurity threats employing the vulnerabilities of the Skype product.
+- _Rationale:_ The security risk of allowing contact with skype users is aligned with the risk of contact with a retiring product and its current vulnerabilities. Microsoft is officailly retiring all forms of Skype as listed above. By blocking contact with Skype users an agency is limiting access to security threats utilizing the vulnerabilities of the Skype product.
 - _Last modified:_ July 2023
 
 ### Resources
@@ -408,7 +408,7 @@ This section helps reduce security risks related to teams email integration. Tea
 ### Policies
 #### MS.TEAMS.7.1v1
 Teams email integration SHALL be disabled.
-- _Rationale:_ The security risk with Team's email integration is due to the channel email addresses are not under the tenant’s domain, rather they are associated with the Microsoft-owned domain of "teams.ms". Due to the the email's assocaition with the Microsoft-owned domain, agencies do not have control over the security settings associated withthis email. For this reason, email channel integration should be disabled.
+- _Rationale:_ The security risk with Microsoft Team's email integration is due to the fact that Teams channel's email addresses are not under the tenant’s domain, rather they are associated with the Microsoft-owned domain of "teams.ms". By disabling Teams email integration the risk of use of emails outside of the agency's security settings control is minimized.
 - _Last modified:_ July 2023
 
 ### Resources
@@ -458,11 +458,6 @@ Agencies SHOULD NOT allow installation of all third-party apps or custom apps in
 - _Rationale:_ TODO
 - _Last modified:_ July 2023
 - _Note:_ Custom policies MAY be created to allow more flexibility for specific users.
-
-#### MS.TEAMS.8.3v1
-Agencies SHALL establish policy dictating the app review and approval process to be used by the agency.
-- _Rationale:_ TODO
-- _Last modified:_ July 2023
 
 ### Resources
 
@@ -516,9 +511,6 @@ All the settings in this section are configured in the **Microsoft Teams admin c
 7.  If custom policies have been created, repeat these steps for each
     policy, selecting the appropriate policy in step 3.
 
-#### MS.TEAMS.8.3v1, instructions:
-
-N/A
 
 ## 9. Cloud Recording of Teams Meetings
 
