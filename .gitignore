@@ -8,6 +8,7 @@
 *.xml
 *.cer
 *.exe
+*.cat
 /M365/*.xml
 /PowerShell/output
 /PowerShell/example
@@ -22,6 +23,9 @@
 
 # IDE
 /.vscode
+
+# MacOS
+**/.DS_Store
 
 # Reports
 **/M365BaselineConformance*

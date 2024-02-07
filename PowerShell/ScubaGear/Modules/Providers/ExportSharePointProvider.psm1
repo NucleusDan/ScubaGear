@@ -1,7 +1,7 @@
 function Export-SharePointProvider {
     <#
     .Description
-    Gets the SharePoint settings that are relevant
+    Gets the SharePoint/OneDrive settings that are relevant
     to the SCuBA SharePoint baselines using the SharePoint PowerShell Module
     .Functionality
     Internal
@@ -24,7 +24,7 @@ function Export-SharePointProvider {
     $Tracker = Get-CommandTracker
 
     #Get InitialDomainPrefix
-    $InitialDomain = ($Tracker.TryCommand("Get-MgOrganization")).VerifiedDomains | Where-Object {$_.isInitial}
+    $InitialDomain = ($Tracker.TryCommand("Get-MgBetaOrganization")).VerifiedDomains | Where-Object {$_.isInitial}
     $InitialDomainPrefix = $InitialDomain.Name.split(".")[0]
 
     #Get SPOSiteIdentity
@@ -33,11 +33,13 @@ function Export-SharePointProvider {
 
     $SPOTenant = ConvertTo-Json @()
     $SPOSite = ConvertTo-Json @()
+    $UsedPnP = ConvertTo-Json $false
     if ($PnPFlag) {
         $SPOTenant = ConvertTo-Json @($Tracker.TryCommand("Get-PnPTenant"))
         $SPOSite = ConvertTo-Json @($Tracker.TryCommand("Get-PnPTenantSite",@{"Identity"="$($SPOSiteIdentity)"; "Detailed"=$true}) | Select-Object -Property *)
         $Tracker.AddSuccessfulCommand("Get-SPOTenant")
         $Tracker.AddSuccessfulCommand("Get-SPOSite")
+        $UsedPnP = ConvertTo-Json $true
     }
     else {
         $SPOTenant = ConvertTo-Json @($Tracker.TryCommand("Get-SPOTenant"))
@@ -54,12 +56,10 @@ function Export-SharePointProvider {
     $json = @"
     "SPO_tenant": $SPOTenant,
     "SPO_site": $SPOSite,
+    "OneDrive_PnP_Flag": $UsedPnp,
     "SharePoint_successful_commands": $SuccessfulCommands,
     "SharePoint_unsuccessful_commands": $UnSuccessfulCommands,
 "@
 
-    # We need to remove the backslash characters from the json, otherwise rego gets mad.
-    $json = $json.replace("\`"", "'")
-    $json = $json.replace("\", "")
     $json
 }

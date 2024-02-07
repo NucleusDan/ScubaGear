@@ -51,7 +51,7 @@ function Export-PowerPlatformProvider {
             }
         }
         $Uri = "https://login.microsoftonline$($TLD)/$($TenantDomain)/.well-known/openid-configuration"
-        $TenantIdConfig = (Invoke-WebRequest -Uri $Uri  -ErrorAction "Stop").Content
+        $TenantIdConfig = (Invoke-WebRequest -Uri $Uri -UseBasicParsing -ErrorAction "Stop").Content
     }
     catch {
         $EnvCheckWarning = @"
@@ -131,10 +131,10 @@ $($_)
         throw $FullEnvErrorMessage
     }
 
-    # 2.1
+    # MS.POWERPLATFORM.1.1v1, MS.POWERPLATFORM.1.2v1, MS.POWERPLATFORM.5.1v1
     $EnvironmentCreation = ConvertTo-Json @($Tracker.TryCommand("Get-TenantSettings"))
 
-    # 2.2
+    # MS.POWERPLATFORM.2.1v1, MS.POWERPLATFORM.2.2v1, MS.POWERPLATFORM.2.3v1
     $EnvironmentList = ConvertTo-Json @($Tracker.TryCommand("Get-AdminPowerAppEnvironment"))
 
     # Check for null return
@@ -163,7 +163,7 @@ $($_)
         Write-Warning "Error running Get-DlpPolicy: $($_). <= If a HTTP 403 ERROR is thrown then this is because you do not have the proper permissions. Necessary roles for running ScubaGear with Power Platform: Power Platform Administrator with a Power Apps License or Global Admininstrator"
     }
 
-    # 2.3
+    # MS.POWERPLATFORM.3.1v1
     # has to be tested manually because of http 403 errors
     $TenantIsolation = ConvertTo-Json @()
     try {
@@ -184,7 +184,9 @@ $($_)
         Write-Warning "Error running Get-PowerAppTenantIsolationPolicy: $($_). <= If a HTTP 403 ERROR is thrown then this is because you do not have the proper permissions. Necessary roles for running ScubaGear with Power Platform: Power Platform Administrator with a Power Apps License or Global Admininstrator"
     }
 
-    # 2.4 currently has no corresponding PowerShell Cmdlet
+    # MS.POWERPLATFORM.3.2v1 currently has no corresponding PowerShell Cmdlet
+
+    # MS.POWERPLATFORM.4.1v1 currently has no corresponding PowerShell Cmdlet
 
     $PowerPlatformSuccessfulCommands = ConvertTo-Json @($Tracker.GetSuccessfulCommands())
     $PowerPlatformUnSuccessfulCommands = ConvertTo-Json @($Tracker.GetUnSuccessfulCommands())
@@ -201,10 +203,6 @@ $($_)
     "powerplatform_unsuccessful_commands": $PowerPlatformUnSuccessfulCommands,
 "@
 
-    # We need to remove the backslash characters from the
-    # json, otherwise rego gets mad.
-    $json = $json.replace("\`"", "'")
-    $json = $json.replace("\", "")
     $json = $json -replace "[^\x00-\x7f]","" # remove all characters that are not utf-8
     $json
 }

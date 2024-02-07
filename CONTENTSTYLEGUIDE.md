@@ -1,6 +1,6 @@
 # Content style guide for SCuBA <!-- omit in toc -->
 
-Welcome to the content style guide for ScubaGear
+Welcome to the content style guide for ScubaGear!
 
 These guidelines are specific to style rules for PowerShell and OPA Rego code. For general style questions or guidance on topics not covered here, ask or go with best guess and bring up at a later meeting.
 
@@ -10,12 +10,12 @@ Use menu icon on the top left corner of this document to get to a specific secti
 
 - Our style guide aims for simplicity. Guidelines should be easy to apply to a range of scenarios.
 - Decisions aren’t about what’s right or wrong according to the rules, but about what’s best practice and improves readability. We're flexible and open to change while maintaining consistency.
-- When making a style or structure decision, we consider the readability, maintainability and ability for consitancy in a range of situations.
+- When making a style or structure decision, we consider the readability, maintainability and ability for consistency in a range of situations.
 - When a question specific to help documentation isn’t covered by the style guide, we think it through using these principles, then make a decision and bring it up in the next meeting for deliberation.
 
 ## OPA Rego
 
-Because there isn't a standard style guide for the Rego language, we are creating one from scratch. For consistency, we will be using many of the same style rules as PowerShell. There are also a few best practice rules that this program will follow. These best practices were deliberated on and chosen to enhance readability. We recognize that the code is in a constant state of improvement, so the best practices are subject to change.
+The project is adopting the following public Rego [style guide](https://docs.styra.com/opa/rego-style-guide), except where our guide specifically notes an exception (e.g., variable name case). For consistency, we will be using many of the same style rules as PowerShell. There are also a few best practice rules that this project will follow. These best practices were chosen to enhance readability. We recognize that the code is in a constant state of improvement, so the best practices are subject to change. The project is also integrating the [Regal](https://github.com/StyraInc/regal) linter into its automated checks to promote style guide adherence.
 
 ### Test Cases
 
@@ -23,9 +23,7 @@ Test names will use the syntax `test_mainVar_In/correct_*V#` to support brevity 
 
 ```
 test_ExampleVar_Correct_V1 if {
-    PolicyId := "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>"
-
-    Output := tests with input as {
+    Output := <Product>.tests with input as {
         "example_policies" : [
             {
                 "Example3" : "ExampleString",
@@ -34,11 +32,7 @@ test_ExampleVar_Correct_V1 if {
         ]
     }
 
-    RuleOutput := [Result | Result = Output[_]; Result.PolicyId == PolicyId]
-
-    count(RuleOutput) == 1
-    RuleOutput[0].RequirementMet
-    RuleOutput[0].ReportDetails == "Example output"
+    TestResult("MS.<Product>.<Policy Group #>.<Policy #>v<Version #>", Output, "ReportDetailString", true) == true
 }
 
 test_ExampleVar_Correct_V2 if {
@@ -46,9 +40,7 @@ test_ExampleVar_Correct_V2 if {
 }
 
 test_ExampleVar_Incorrect if {
-    PolicyId := "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>"
-
-    Output := tests with input as {
+    Output := <Product>.tests with input as {
         "example_policies" : [
             {
                 "Example3" : "ExampleString",
@@ -57,17 +49,31 @@ test_ExampleVar_Incorrect if {
         ]
     }
 
-    RuleOutput := [Result | Result = Output[_]; Result.PolicyId == PolicyId]
+    TestResult("MS.<Product>.<Policy Group #>.<Policy #>v<Version #>", Output, "ReportDetailString", false) == true
+}
 
-    count(RuleOutput) == 1
-    not RuleOutput[0].RequirementMet
-    RuleOutput[0].ReportDetails == "Example output"
+test_ExampleVar_UnknownReportString_Incorrect if {
+    Output := <Product>.tests with input as {
+        "example_policies" : [
+            {
+                "Example3" : "ExampleString",
+                "Example2" : true
+            }
+        ]
+    }
+
+    ReportDetailArrayStrs := [
+        "Part of string",
+        "Second part",
+        "Third part"
+    ]
+    TestResultContains("MS.<Product>.<Policy Group #>.<Policy #>v<Version #>", Output, ReportDetailArrayStrs, false) == true
 }
 ```
 
 ### Not Implemented
 
-If the policy bullet point is untestable at this time, use the templates below.
+If the policy is untestable at this time, use the templates below.
 
 #### Config
 
@@ -75,58 +81,45 @@ The first one directs the user to the baseline document for manual checking. The
 
 ```
 # At this time we are unable to test for X because of Y
-tests[{
-    "PolicyId" : PolicyId,
-    "Criticality" : "Shall/Not-Implemented",
-    "Commandlet" : [],
-    "ActualValue" : [],
-    "ReportDetails" : NotCheckedDetails(PolicyId),
-    "RequirementMet" : false
-}] {
-    PolicyId := "MS.<Product>.<Control Group #>.<Control #>v<Version #>"
-    true
+tests contains {
+    "PolicyId": "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",
+    "Criticality": "Should/Not-Implemented",
+    "Commandlet": [],
+    "ActualValue": [],
+    "ReportDetails": NotCheckedDetails("MS.<Product>.<Policy Group #>.<Policy #>v<Version #>"),
+    "RequirementMet": false,
 }
 ```
 
 ```
 # At this time we are unable to test for X because of Y
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",
-    "Criticality" : "Shall/3rd Party",
-    "Commandlet" : [],
-    "ActualValue" : [],
-    "ReportDetails" : "Custom implementation allowed. If you are using Defender to fulfill this requirement, run the Defender version of this script. Otherwise, use a 3rd party tool OR manually check",
-    "RequirementMet" : false
-}] {
-    true
+tests contains {
+    "PolicyId": "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>,
+    "Criticality": "Shall/3rd Party",
+    "Commandlet": [],
+    "ActualValue": [],
+    "ReportDetails": DefenderMirrorDetails("MS.<Product>.<Policy Group #>.<Policy #>v<Version #>"),
+    "RequirementMet": false,
 }
 ```
 #### Testing
 
 ```
 test_NotImplemented_Correct if {
-    PolicyId := "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>"
+    PolicyId := "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>"
 
-    Output := tests with input as { }
+    Output := <Product>.tests with input as { }
 
-    RuleOutput := [Result | Result = Output[_]; Result.PolicyId == PolicyId]
-
-    count(RuleOutput) == 1
-    not RuleOutput[0].RequirementMet
-    RuleOutput[0].ReportDetails == NotCheckedDetails(PolicyId)
+    TestResult(PolicyId, Output, NotCheckedDetails(PolicyId), false) == true
 }
 ```
 ```
 test_3rdParty_Correct_V1 if {
-    PolicyId := "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>"
+    PolicyId := "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>"
 
-    Output := tests with input as { }
+    Output := <Product>.tests with input as { }
 
-    RuleOutput := [Result | Result = Output[_]; Result.PolicyId == PolicyId]
-
-    count(RuleOutput) == 1
-    not RuleOutput[0].RequirementMet
-    RuleOutput[0].ReportDetails == "Custom implementation allowed. If you are using Defender to fulfill this requirement, run the Defender version of this script. Otherwise, use a 3rd party tool OR manually check"
+    TestResult(PolicyId, Output, DefenderMirrorDetails(PolicyId), false) == true
 }
 ```
 
@@ -144,19 +137,13 @@ One True Brace - requires that every braceable statement should have the opening
 
 ```
 test_Example_Correct if {
-    PolicyId := "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>"
-
-    Output := tests with input as {
+    Output := <Product>.tests with input as {
         "example_tag" : {
             "ExampleVar" : false
         }
     }
 
-    RuleOutput := [Result | Result = Output[_]; Result.PolicyId == PolicyId]
-
-    count(RuleOutput) == 1
-    RuleOutput[0].RequirementMet
-    RuleOutput[0].ReportDetails == "Requirement met"
+    TestResult("MS.<Product>.<Policy Group #>.<Policy #>v<Version #>", Output, "ReportDetailString", true) == true
 }
 ```
 
@@ -169,39 +156,39 @@ Indentation will be set at 4 spaces, make sure your Tabs == 4 spaces. We are wor
 1) A blank line between each major variable: references & rules
 
 ```
-Example[Example.Id] {
+Example contains Example.Id if {
     Example := input.ExampleVar[_]
     Example.State == "Enabled"
 }
 
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",
+tests contains {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",
     "Criticality" : "Shall",
     "Commandlet" : "Example-Command",
     "ActualValue" : ExampleVar.ExampleSetting,
     "ReportDetails" : ReportDetailsBoolean(Status),
     "RequirementMet" : Status
-}] {
+} if {
     ExampleVar := input.ExampleVar
     Status := ExampleVar == 15
 }
 
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",,
+tests {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",,
 ...
 ```
 
 2) Two blank lines between subsections
 
 ```
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",,
+tests contains {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",,
     "Criticality" : "Should",
     "Commandlet" : "Example-Command",
     "ActualValue" : ExampleVar.ExampleSetting,
     "ReportDetails" : ReportDetailsBoolean(Status),
     "RequirementMet" : Status
-}] {
+} if {
     ExampleVar := input.ExampleVar
     Status := ExampleVar == 15
 }
@@ -222,15 +209,15 @@ tests[{
 # MS.<Product>.1  #
 ###################
 ```
-2) Indicate the beginning of every policy bullet point.
+2) Indicate the beginning of every policy.
 
 ```
 #
-# MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>
+# MS.<Product>.<Policy Group #>.<Policy #>v<Version #>
 #--
 ```
 
-3) Indicate the end of every policy bullet point.
+3) Indicate the end of every policy.
 
 ```
 #--
@@ -244,31 +231,31 @@ tests[{
 
 ### Booleans
 
-In the interest of consistency across policy tests and human readability of the test, boolean-valued variables should be set via a comparison test against a boolean constant (true/false).
+In the interest of consistency across policy tests and human readability of the test, boolean-valued variables should be set via a comparison test against a boolean constant (true/false) for variables.
 
 #### Correct
 
 ```
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",,
+tests contains {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",,
     "Criticality" : "Should",
     "Commandlet" : "Example-Command",
     "ActualValue" : ExampleVar.ExampleSetting,
     "ReportDetails" : ReportDetailsBoolean(Status),
     "RequirementMet" : Status
-}] {
+} if {
     ExampleVar := input.ExampleVar
     Status := ExampleVar == true
 }
 
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",,
+tests contains {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",,
     "Criticality" : "Should",
     "Commandlet" : "Example-Command",
     "ActualValue" : ExampleVar.ExampleSetting,
     "ReportDetails" : ReportDetailsBoolean(Status),
     "RequirementMet" : Status
-}] {
+} if {
     ExampleVar := input.ExampleVar
     Status := ExampleVar == false
 }
@@ -277,73 +264,135 @@ tests[{
 #### Incorrect
 
 ```
-tests[{
+tests contains {
     ...
-}] {
+} if {
     ExampleVar := input.ExampleVar
-    Status := ExampleVar # Mising == true
+    Status := ExampleVar # Missing == true
 }
 
-tests[{
+tests contains {
     ...
-}] {
+} if {
     ExampleVar := input.ExampleVar
     Status := ExampleVar == false
 }
 ```
 
-### Taking input
+Because methods can return undefined, use `not` instead of false comparison when dealing with booleans. `not` will still pass if the you want the false result, i.e. `== false`, but will also pass if the result is undefined. This is important because the default keyword does not work for methods, only variables. So you write your methods for the true cases & treat false/undefined results as failing cases.
 
-We will always store the input in a variable first thing. It can sometimes be easier to only use `input.ExampleVar` repeatedly, but for consistancy this is best practice. the `[_]` is added to the end for when you are anticipating an array, so the program has to loop through the input. There are other ways to take in input, but OPA Documents states `input.VariableName` is recommended. As such we will only use this method for consistancy. If there is a problem, it can be taken up on a case by case basis for disscussion.
+#### Correct
+
 
 ```
-tests[{
+ExampleVariable contains SomeVariable.DisplayName if {
+    some X
+    SomeVariable := input.example_key[X]
+    not is_null(SomeVariable.OnPremisesImmutableId)
+}
+```
+
+#### Incorrect
+
+```
+ExampleVariable contains SomeVariable.DisplayName if {
+    some X
+    SomeVariable := input.example_key[X]
+    is_null(SomeVariable.OnPremisesImmutableId) == false
+}
+```
+
+Opa will use implicit true in some cases. For example, if the variable contained a true/false boolean, you did not need `== true` to check if the boolean contained is true. This is also true in method returns. Opa assumes methods return true/false & if not specified, will return true. For readability purposes, we enforce explicitly stating `:= true`.
+
+#### Correct
+```
+ExampleMethod(Variable) := true if {
+    count({x | some x in Variable}) == 0
+}
+```
+
+#### Incorrect
+
+```
+ExampleMethod(Variable) if {
+    count({x | some x in Variable}) == 0
+}
+```
+
+### Taking input
+
+We will always store the input in a variable first thing. It can sometimes be easier to only use `input.ExampleVar` repeatedly, but for consistency this is best practice. the `some var in` is added to the end for when you are anticipating an array, so the program has to loop through the input. There are other ways to take in input, but OPA Documents states `input.VariableName` is recommended. As such we will only use this method for consistency. If there is a problem, it can be taken up on a case by case basis for discussion.
+
+```
+tests contains {
     ...
-}] {
-    ExampleVar := input.ExampleVar[_]
+} if {
+    some ExampleVar in input.example_var
     Status := "Example" in ExampleVar
 }
 
-tests[{
+tests contains {
     ...
-}] {
-    ExampleVar := input.ExampleVar
+} if {
+    some ExampleVar in input.example_var[_].nested_var
+    Status := "Example" in ExampleVar
+}
+
+tests contains {
+    ...
+} if {
+    ExampleVar := input.example_var
     Status := ExampleVar == true
 }
 ```
 
 ### ActualValue
 
-It can be tempting to put the status variable in the ActualValue spot when you are anticipating a boolean. DON'T! For consistancy and as best practice put `ExampleVar.ExampleSetting`.
+It can be tempting to put the status variable in the ActualValue spot when you are anticipating a boolean. DON'T! For consistency and as best practice put `ExampleVar.ExampleSetting`.
 
-#### InCorrect
+#### Incorrect
 ```
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",,
+tests contains {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",,
     "Criticality" : "Should",
     "Commandlet" : "Example-Command",
     "ActualValue" : Status,
     "ReportDetails" : ReportDetailsBoolean(Status),
     "RequirementMet" : Status
-}] {
-    ExampleVar := input.ExampleVar
+} if {
+    ExampleVar := input.example_var
     Status := ExampleVar == true
 }
 ```
 
 #### Correct
 ```
-tests[{
-    "PolicyId" : "MS.<Product>.<Policy #>.<Bulletpoint #>v<Version #>",,
+tests contains {
+    "PolicyId" : "MS.<Product>.<Policy Group #>.<Policy #>v<Version #>",,
     "Criticality" : "Should",
     "Commandlet" : "Example-Command",
     "ActualValue" : ExampleVar.ExampleSetting,
     "ReportDetails" : ReportDetailsBoolean(Status),
     "RequirementMet" : Status
-}] {
-    ExampleVar := input.ExampleVar
+} if {
+    ExampleVar := input.example_var
     Status := ExampleVar == true
 }
 ```
+
+### Linter Warnings
+
+For the most part warnings can and should be fixed. However, there are times where the fix would make the code more difficult to maintain and understand. In these rare cases,
+add a comment indicating to ignore the specific linter warning.
+
+#### Example
+```
+ExampleArray contains OtherVar.name if {
+    # regal ignore:<rule_name>
+    some Var in input.some_key[_].value
+    some OtherVar in Var.example_key
+}
+```
+
 ## PowerShell
 [PoshCode's The PowerShell Best Practices and Style Guide](https://github.com/PoshCode/PowerShellPracticeAndStyle)

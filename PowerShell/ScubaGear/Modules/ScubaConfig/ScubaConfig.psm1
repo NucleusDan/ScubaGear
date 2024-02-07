@@ -27,7 +27,7 @@ class ScubaConfig {
 
     hidden [void]SetParameterDefaults(){
         if (-Not $this.Configuration.ProductNames){
-            $this.Configuration.ProductNames = "teams", "exo", "defender", "aad", "sharepoint", "onedrive", "powerplatform" | Sort-Object
+            $this.Configuration.ProductNames = "teams", "exo", "defender", "aad", "sharepoint", "powerplatform" | Sort-Object
         }
         else{
             $this.Configuration.ProductNames = $this.Configuration.ProductNames | Sort-Object
@@ -38,7 +38,7 @@ class ScubaConfig {
         }
 
         if (-Not $this.Configuration.OPAPath){
-            $this.Configuration.OPAPath = (Join-Path -Path $PSScriptRoot -ChildPath "..\..\..")
+            $this.Configuration.OPAPath = (Join-Path -Path $PSScriptRoot -ChildPath "..\..\..\..")
         }
 
         if (-Not $this.Configuration.LogIn){
@@ -62,7 +62,7 @@ class ScubaConfig {
         }
 
         if (-Not $this.Configuration.OutRegoFileName){
-            $this.Configuration.OutFolderName = "TestResults"
+            $this.Configuration.OutRegoFileName = "TestResults"
         }
 
         if (-Not $this.Configuration.OutReportName){
