@@ -35,6 +35,8 @@ InModuleScope Orchestrator {
                 Mock -ModuleName Orchestrator Disconnect-SCuBATenant {
                     $script:TestSplat.Add('DisconnectOnExit', $DisconnectOnExit)
                 }
+                function Get-ScubaDefault {throw 'this will be mocked'}
+                Mock -ModuleName Orchestrator Get-ScubaDefault {"."}
                 Mock -CommandName New-Item {}
                 Mock -CommandName Copy-Item {}
             }
@@ -97,6 +99,31 @@ InModuleScope Orchestrator {
                 @{ Parameter = "CertificateThumbprint"; Value = "AB123456789ABCDEF01"  }
                 ){
                     $script:TestSplat[$Parameter] | Should -BeExactly $Value -Because "got $($script:TestSplat[$Parameter])"
+            }
+        }
+
+        Describe -Tag 'Orchestrator' -Name 'Invoke-Scuba with command line ProductNames wild card override' {
+            BeforeAll {
+                SetupMocks
+                Invoke-SCuBA `
+                  -ProductNames "*" `
+                  -ConfigFilePath (Join-Path -Path $PSScriptRoot -ChildPath "orchestrator_config_test.yaml")
+            }
+
+            It "Verify parameter, ProductNames, with wildcard CLI override"{
+                $script:TestSplat['ProductNames'] | Should -BeExactly @('aad', 'defender', 'exo', 'powerplatform', 'sharepoint', 'teams') -Because "got $($script:TestSplat['ProductNames'])"
+            }
+        }
+
+        Describe -Tag 'Orchestrator' -Name 'Invoke-Scuba with config file ProductNames wild card' {
+            BeforeAll {
+                SetupMocks
+                Invoke-SCuBA `
+                  -ConfigFilePath (Join-Path -Path $PSScriptRoot -ChildPath "product_wildcard_config_test.yaml")
+            }
+
+            It "Verify parameter, ProductNames, reflects all products"{
+                $script:TestSplat['ProductNames'] | Should -BeExactly @('aad', 'defender', 'exo', 'powerplatform', 'sharepoint', 'teams') -Because "got $($script:TestSplat['ProductNames'])"
             }
         }
     }

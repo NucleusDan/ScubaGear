@@ -1,6 +1,5 @@
 using module 'ScubaConfig\ScubaConfig.psm1'
 
-
 function Invoke-SCuBA {
     <#
     .SYNOPSIS
@@ -115,7 +114,7 @@ function Invoke-SCuBA {
         [ValidateNotNullOrEmpty()]
         [ValidateSet("teams", "exo", "defender", "aad", "powerplatform", "sharepoint", '*', IgnoreCase = $false)]
         [string[]]
-        $ProductNames = @("teams", "exo", "defender", "aad", "sharepoint"),
+        $ProductNames = @("aad", "defender", "exo", "sharepoint", "teams"),
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Configuration')]
         [Parameter(Mandatory = $false, ParameterSetName = 'Report')]
@@ -128,7 +127,7 @@ function Invoke-SCuBA {
         [Parameter(Mandatory = $false, ParameterSetName = 'Report')]
         [ValidateScript({Test-Path -PathType Container $_})]
         [string]
-        $OPAPath = (Join-Path -Path $env:USERPROFILE -ChildPath ".scubagear\Tools"),
+        $OPAPath = [ScubaConfig]::ScubaDefault('DefaultOPAPath'),
 
         [Parameter(Mandatory = $false, ParameterSetName = 'Configuration')]
         [Parameter(Mandatory = $false, ParameterSetName = 'Report')]
@@ -231,12 +230,14 @@ function Invoke-SCuBA {
             return
         }
 
+        # Transform ProductNames into list of all products if it contains wildcard
+        if ($ProductNames.Contains('*')){
+            $ProductNames = $PSBoundParameters['ProductNames'] = "aad", "defender", "exo", "powerplatform", "sharepoint", "teams"
+            Write-Debug "Setting ProductName to all products because of wildcard"
+        }
+
         # Default execution ParameterSet
         if ($PSCmdlet.ParameterSetName -eq 'Report'){
-
-            if ($ProductNames -eq '*'){
-                $ProductNames = "teams", "exo", "defender", "aad", "sharepoint", "powerplatform"
-            }
 
             $ProvidedParameters = @{
                 'ProductNames' = $ProductNames | Sort-Object
