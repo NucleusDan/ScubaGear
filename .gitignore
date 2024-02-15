@@ -32,3 +32,7 @@
 /Testing/Functional/Reports*
 /Testing/Functional/Archive*
 /opa_windows_amd64.exe
+
+# Nucleus Ignores
+.gitignore
+.personal_notes.md
