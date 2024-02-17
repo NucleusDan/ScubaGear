@@ -35,4 +35,5 @@
 
 # Nucleus Ignores
 .gitignore
+.ignore
 .personal_notes.md
