@@ -2,18 +2,17 @@
 
 name: Lint Check for YAML
 
-# Run whenever YAML files are checked in
+# This is a reusable workflow called by the pipeline.
 on:
-  push:
-    paths:
-      - "**.yml"
-      - "**.yaml"
+  workflow_call:
   workflow_dispatch:
 
 jobs:
   yaml-lint-check:
     name: MegaLint YAML Check
     runs-on: ubuntu-latest
+    # This condition prevents duplicate runs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     defaults:
       run:
         shell: bash

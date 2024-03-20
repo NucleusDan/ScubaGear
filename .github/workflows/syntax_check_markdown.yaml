@@ -1,25 +1,18 @@
-on:
-  workflow_dispatch:
-  pull_request:
-    types: [opened, reopened]
-    branches:
-      - "main"
-  pull_request_review:
-    types: [submitted]
-  push:
-    branches:
-      - "main"
-      - "*Baseline*"
-      - "*FunctionalTest"
-    paths:
-      - "baselines/*.md"
-      - ".github/workflows/run_markdown_check.yaml"
+# Purpose: Run the syntax checks for Markdown.
 
-name: Markdown Check
+name: Syntax Checks for Markdown
+
+# This is a reusable workflow called by the pipeline.
+on:
+  workflow_call:
+  workflow_dispatch:
 
 jobs:
-  Run-Markdown-Check:
+  markdown-check:
+    name: Markdown Syntax Checks
     runs-on: windows-latest
+    # This condition prevents duplicate runs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     defaults:
       run:
         shell: powershell

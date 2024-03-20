@@ -1,7 +1,9 @@
 package aad
-import future.keywords
+import rego.v1
 import data.utils.report.NotCheckedDetails
+import data.utils.report.CheckedSkippedDetails
 import data.utils.report.ReportDetailsBoolean
+import data.utils.report.ReportDetailsString
 import data.utils.key.IsEmptyContainer
 import data.utils.key.Contains
 import data.utils.key.Count
@@ -11,7 +13,6 @@ import data.utils.key.ConvertToSet
 import data.utils.aad.ReportFullDetailsArray
 import data.utils.aad.ReportDetailsArrayLicenseWarningCap
 import data.utils.aad.ReportDetailsArrayLicenseWarning
-import data.utils.aad.ReportDetailsBooleanLicenseWarning
 import data.utils.aad.UserExclusionsFullyExempt
 import data.utils.aad.GroupExclusionsFullyExempt
 import data.utils.aad.Aad2P2Licenses
@@ -26,9 +27,9 @@ import data.utils.aad.INT_MAX
 # Constants #
 #############
 
-RESTRICTEDACCESS := "2af84b1e-32c8-42b7-82bc-daa82404023b"
+RESTRICTEDACCESS := "2af84b1e-32c8-42b7-82bc-daa82404023b" #gitleaks:allow
 
-LIMITEDACCESS := "10dae51f-b6af-4016-8d66-8c2a99b929b3"
+LIMITEDACCESS := "10dae51f-b6af-4016-8d66-8c2a99b929b3" #gitleaks:allow
 
 MEMBERUSER := "a0b1b346-4d3e-4e8b-98f8-753987be4970"
 
@@ -280,6 +281,11 @@ tests contains {
 # MS.AAD.3.4v1
 #--
 
+PolicyMigrationIsComplete := Status if {
+    some Policy in input.authentication_method
+    Status := Policy.PolicyMigrationState == "migrationComplete"
+}
+
 # At this time we are unable to test for X because of NEW POLICY
 tests contains {
     "PolicyId": "MS.AAD.3.4v1",
@@ -298,15 +304,42 @@ tests contains {
 # MS.AAD.3.5v1
 #--
 
-# At this time we are unable to test for SMS/Voice settings due to lack of API to validate
-# Awaiting API changes and feature updates from Microsoft for automated checking
+GoodAuthenticationMethodConfigurations contains {
+    "Id": Configuration.Id,
+    "State": Configuration.State
+} if {
+    some Item in input.authentication_method
+    some Configuration in Item.AuthenticationMethodConfigurations
+    Configuration.Id in ["Sms", "Voice", "Email"]
+    Configuration.State == "disabled"
+}
+
+tests contains {
+    "PolicyId": PolicyId,
+    "Criticality": "Shall",
+    "Commandlet": ["Get-MgBetaPolicyAuthenticationMethodPolicy"],
+    "ActualValue": [],
+    "ReportDetails": CheckedSkippedDetails("MS.AAD.3.4v1", Reason),
+    "RequirementMet": false
+} if {
+    PolicyId := "MS.AAD.3.5v1"
+    # regal ignore:line-length
+    Reason := "This policy is only applicable if the tenant has their Manage Migration feature set to Migration Complete. See %v for more info"
+    PolicyMigrationIsComplete != true
+}
+
 tests contains {
     "PolicyId": "MS.AAD.3.5v1",
-    "Criticality": "Shall/Not-Implemented",
-    "Commandlet": [],
+    "Criticality": "Shall",
+    "Commandlet": ["Get-MgBetaPolicyAuthenticationMethodPolicy"],
     "ActualValue": [],
-    "ReportDetails": NotCheckedDetails("MS.AAD.3.5v1"),
-    "RequirementMet": false
+    "ReportDetails": ReportDetailsString(Status, ErrorMessage),
+    "RequirementMet": Status
+} if {
+    ErrorMessage := "Sms, Voice, and Email authentication must be disabled."
+    PolicyMigrationIsComplete == true
+    Conditions := [PolicyMigrationIsComplete == true, count(GoodAuthenticationMethodConfigurations) == 3]
+    Status := count(FilterArray(Conditions, false)) == 0
 }
 #--
 
@@ -345,7 +378,7 @@ PhishingResistantMFA contains CAPolicy.DisplayName if {
 tests contains {
     "PolicyId": "MS.AAD.3.6v1",
     "Criticality": "Shall",
-    "Commandlet": ["Get-MgBetaSubscribedSku", "Get-PrivilegedRole", "Get-MgBetaIdentityConditionalAccessPolicy"],
+    "Commandlet": ["Get-MgBetaIdentityConditionalAccessPolicy"],
     "ActualValue": PhishingResistantMFA,
     "ReportDetails": concat(". ", [ReportFullDetailsArray(PhishingResistantMFA, DescriptionString), CAPLINK]),
     "RequirementMet": Status
@@ -675,6 +708,13 @@ GlobalAdmins contains User.DisplayName if {
     "Global Administrator" in User.roles
 }
 
+#Set conditions under which this policy will pass
+default IsGlobalAdminCountGood := false
+IsGlobalAdminCountGood := true if {
+    count(GlobalAdmins) <= 8
+    count(GlobalAdmins) >= 2
+}
+
 # Pass if there are at least 2, but no more than 8
 # users with Global Admin role.
 tests contains {
@@ -686,25 +726,46 @@ tests contains {
     "RequirementMet": Status
 } if {
     DescriptionString := "global admin(s) found"
-    Conditions := [
-        count(GlobalAdmins) <= 8,
-        count(GlobalAdmins) >= 2
-    ]
-    Status := count(FilterArray(Conditions, false)) == 0
+    Status := IsGlobalAdminCountGood
 }
 #--
 
 # MS.AAD.7.2v1
 #--
 
-# At this time we are unable to test for 7.2v1
+# Save all users that don't have Global Admin role
+NotGlobalAdmins contains User.DisplayName if {
+    some User in input.privileged_users
+    not "Global Administrator" in User.roles
+}
+
+default GetScoreDescription := "All privileged users are Global Admin"
+GetScoreDescription := concat("", ["Least Privilege Score = ", Score, " (should be 1 or less)"]) if {
+    count(NotGlobalAdmins) > 0
+    RawRatio := sprintf("%v", [count(GlobalAdmins)/count(NotGlobalAdmins)])
+    CutOff := min([4, count(RawRatio)])
+    Score := substring(RawRatio, 0, CutOff)
+}
+
+# calculate least privilege score as ratio of priv users with global admin role to priv users without global admin role
+LeastPrivilegeScore := "Policy MS.AAD.7.1 failed so score not computed" if {
+    IsGlobalAdminCountGood == false
+} else := GetScoreDescription
+
+# Pass if 7.1 passed and Least Privilege Score < 1, fail if 7.1 failed or Least Privilege score is >= 1
 tests contains {
     "PolicyId": "MS.AAD.7.2v1",
-    "Criticality": "Shall/Not-Implemented",
-    "Commandlet": [],
-    "ActualValue": [],
-    "ReportDetails": NotCheckedDetails("MS.AAD.7.2v1"),
-    "RequirementMet": false
+    "Criticality" : "Shall",
+    "Commandlet" : ["Get-MgBetaSubscribedSku", "Get-PrivilegedUser"],
+    "ActualValue" : GlobalAdmins,
+    "ReportDetails" : concat(": ", [ReportDetailsBoolean(Status), LeastPrivilegeScore]),
+    "RequirementMet" : Status
+} if {
+    Conditions := [
+        IsGlobalAdminCountGood,
+        count(GlobalAdmins) <= count(NotGlobalAdmins)
+    ]
+    Status := count(FilterArray(Conditions, false)) == 0
 }
 #--
 
@@ -819,10 +880,12 @@ tests contains {
 
 # Save role name if id is a specific string and approval is
 # not required.
-RolesWithoutApprovalRequired contains Role.DisplayName if {
+RolesWithoutApprovalRequired contains Offender if {
     some Role in input.privileged_roles
     some Rule in Role.Rules
 
+    Offender := sprintf("%v(%v)", [Rule.RuleSource, Rule.RuleSourceType])
+    Role.DisplayName == "Global Administrator"
     # Filter: only include policies that meet all the requirements
     Rule.Id == "Approval_EndUser_Assignment"
     Rule.AdditionalProperties.setting.isApprovalRequired == false
@@ -835,12 +898,13 @@ tests contains {
     "Criticality": "Shall",
     "Commandlet": ["Get-MgBetaSubscribedSku", "Get-PrivilegedRole"],
     "ActualValue": RolesWithoutApprovalRequired,
-    "ReportDetails": ReportDetailsBooleanLicenseWarning(Status),
+    "ReportDetails": ReportDetailsArrayLicenseWarning(RolesWithoutApprovalRequired, DescriptionString),
     "RequirementMet": Status
 } if {
+    DescriptionString := "role(s) or group(s) allowing activation without approval found"
     Conditions := [
         count(Aad2P2Licenses) > 0,
-        ("Global Administrator" in RolesWithoutApprovalRequired) == false
+        count(RolesWithoutApprovalRequired) == 0
     ]
     Status := count(FilterArray(Conditions, false)) == 0
 }
@@ -852,10 +916,11 @@ tests contains {
 
 # Save role name if id is a specific string and no
 # notification recipients.
-RolesWithoutActiveAssignmentAlerts contains Role.DisplayName if {
+RolesWithoutActiveAssignmentAlerts contains Offender if {
     some Role in input.privileged_roles
     some Rule in Role.Rules
 
+    Offender := sprintf("%v(%v)", [Rule.RuleSource, Rule.RuleSourceType])
     # Filter: only include policies that meet all the requirements
     Rule.Id == "Notification_Admin_Admin_Assignment"
     count(Rule.AdditionalProperties.notificationRecipients) == 0
@@ -863,10 +928,11 @@ RolesWithoutActiveAssignmentAlerts contains Role.DisplayName if {
 
 # Save role name if id is a specific string and no
 # notification recipients.
-RolesWithoutEligibleAssignmentAlerts contains Role.DisplayName if {
+RolesWithoutEligibleAssignmentAlerts contains Offender if {
     some Role in input.privileged_roles
     some Rule in Role.Rules
 
+    Offender := sprintf("%v(%v)", [Rule.RuleSource, Rule.RuleSourceType])
     # Filter: only include policies that meet all the requirements
     Rule.Id == "Notification_Admin_Admin_Eligibility"
     count(Rule.AdditionalProperties.notificationRecipients) == 0
@@ -882,7 +948,7 @@ tests contains {
     "ReportDetails": ReportDetailsArrayLicenseWarning(RolesWithoutAssignmentAlerts, DescriptionString),
     "RequirementMet": Status
 } if {
-    DescriptionString := "role(s) without notification e-mail configured for role assignments found"
+    DescriptionString := "role(s) or group(s) without notification e-mail configured for role assignments found"
     RolesWithoutAssignmentAlerts := RolesWithoutActiveAssignmentAlerts | RolesWithoutEligibleAssignmentAlerts
     Conditions := [
         count(Aad2P2Licenses) > 0,
@@ -898,10 +964,12 @@ tests contains {
 
 # Save role name if id is a specific string, notification
 # type is a specific string, & no notification recipients.
-AdminsWithoutActivationAlert contains Role.DisplayName if {
+GlobalAdminsWithoutActivationAlert contains Offender if {
     some Role in input.privileged_roles
     some Rule in Role.Rules
 
+    Offender := sprintf("%v(%v)", [Rule.RuleSource, Rule.RuleSourceType])
+    Role.DisplayName == "Global Administrator"
     # Filter: only include policies that meet all the requirements
     Rule.Id == "Notification_Admin_EndUser_Assignment"
     Rule.AdditionalProperties.notificationType == "Email"
@@ -914,13 +982,14 @@ tests contains {
     "PolicyId": "MS.AAD.7.8v1",
     "Criticality": "Shall",
     "Commandlet": ["Get-MgBetaSubscribedSku", "Get-PrivilegedRole"],
-    "ActualValue": AdminsWithoutActivationAlert,
-    "ReportDetails": ReportDetailsBooleanLicenseWarning(Status),
+    "ActualValue": GlobalAdminsWithoutActivationAlert,
+    "ReportDetails": ReportDetailsArrayLicenseWarning(GlobalAdminsWithoutActivationAlert, DescriptionString),
     "RequirementMet": Status
 } if {
+    DescriptionString := "role(s) or group(s) without notification e-mail configured for Global Administrator activations found"
     Conditions := [
         count(Aad2P2Licenses) > 0,
-        ("Global Administrator" in AdminsWithoutActivationAlert) == false
+        count(GlobalAdminsWithoutActivationAlert) == 0
     ]
     Status := count(FilterArray(Conditions, false)) == 0
 }
@@ -930,21 +999,32 @@ tests contains {
 # MS.AAD.7.9v1
 #--
 
+OtherAdminsWithoutActivationAlert contains Offender if {
+    some Role in input.privileged_roles
+    some Rule in Role.Rules
+
+    Offender := sprintf("%v(%v)", [Rule.RuleSource, Rule.RuleSourceType])
+    not Role.DisplayName == "Global Administrator"
+    # Filter: only include policies that meet all the requirements
+    Rule.Id == "Notification_Admin_EndUser_Assignment"
+    Rule.AdditionalProperties.notificationType == "Email"
+    count(Rule.AdditionalProperties.notificationRecipients) == 0
+}
+
 # If there are no roles without activation alert &
 # correct license, pass
 tests contains {
     "PolicyId": "MS.AAD.7.9v1",
     "Criticality": "Should",
     "Commandlet": ["Get-MgBetaSubscribedSku", "Get-PrivilegedRole"],
-    "ActualValue": NonGlobalAdminsWithoutActivationAlert,
-    "ReportDetails": ReportDetailsArrayLicenseWarning(NonGlobalAdminsWithoutActivationAlert, DescriptionString),
+    "ActualValue": OtherAdminsWithoutActivationAlert,
+    "ReportDetails": ReportDetailsArrayLicenseWarning(OtherAdminsWithoutActivationAlert, DescriptionString),
     "RequirementMet": Status
 } if {
-    DescriptionString := "role(s) without notification e-mail configured for role activations found"
-    NonGlobalAdminsWithoutActivationAlert = AdminsWithoutActivationAlert - {"Global Administrator"}
+    DescriptionString := "role(s) or group(s) without notification e-mail configured for role activations found"
     Conditions := [
         count(Aad2P2Licenses) > 0,
-        count(NonGlobalAdminsWithoutActivationAlert) == 0
+        count(OtherAdminsWithoutActivationAlert) == 0
     ]
     Status := count(FilterArray(Conditions, false)) == 0
 }

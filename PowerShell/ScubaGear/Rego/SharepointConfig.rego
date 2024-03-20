@@ -1,5 +1,5 @@
 package sharepoint
-import future.keywords
+import rego.v1
 import data.utils.report.NotCheckedDetails
 import data.utils.report.ReportDetailsBoolean
 import data.utils.report.ReportDetailsString
@@ -34,7 +34,7 @@ ANYONE := 2
 # OR Existing Guests, the policy should pass.
 tests contains {
     "PolicyId": "MS.SHAREPOINT.1.1v1",
-    "Criticality": "Should",
+    "Criticality": "Shall",
     "Commandlet": ["Get-SPOTenant", "Get-PnPTenant"],
     "ActualValue": [SharingCapability],
     "ReportDetails": ReportDetailsBoolean(Status),
@@ -58,7 +58,7 @@ tests contains {
 # OR Existing Guests, the policy should pass.
 tests contains {
     "PolicyId": "MS.SHAREPOINT.1.2v1",
-    "Criticality": "Should",
+    "Criticality": "Shall",
     "Commandlet": ["Get-SPOTenant", "Get-PnPTenant"],
     "ActualValue": [OneDriveSharingCapability],
     "ReportDetails": ReportDetailsBoolean(Status),
@@ -76,7 +76,7 @@ tests contains {
 
 tests contains {
     "PolicyId": PolicyId,
-    "Criticality": "Should/Not-Implemented",
+    "Criticality": "Shall/Not-Implemented",
     "Commandlet": [],
     "ActualValue": [],
     "ReportDetails": NotCheckedDetails(PolicyId),
@@ -262,7 +262,7 @@ ExternalUserExpireInDays(TenantPolicy) := [concat(": ", [FAIL, ERRSTRING]), Stat
 
 tests contains {
     "PolicyId": "MS.SHAREPOINT.3.1v1",
-    "Criticality": "Should",
+    "Criticality": "Shall",
     "Commandlet": ["Get-SPOTenant", "Get-PnPTenant"],
     "ActualValue": [
         TenantPolicy.SharingCapability,
@@ -283,27 +283,27 @@ tests contains {
 # Create Repot Detatils string based on File link type & Folder link type
 PERMISSIONSTRING := "are not limited to view for Anyone"
 
-FileAndFolderPermission(1, 1) := PASS if {}
+FileAndFolderPermission(1, 1) := PASS
 
 FileAndFolderPermission(2, 2) := concat(": ", [
         FAIL,
         concat(" ", ["both files and folders", PERMISSIONSTRING])
-    ]) if {}
+    ])
 
 FileAndFolderPermission(1, 2) := concat(": ", [
         FAIL,
         concat(" ", ["folders", PERMISSIONSTRING])
-    ]) if {}
+    ])
 
 FileAndFolderPermission(2, 1) := concat(": ", [
         FAIL,
         concat(" ", ["files", PERMISSIONSTRING])
-    ]) if {}
+    ])
 
 # Both link types must be 2 & OneDrive_PnP_Flag must be false for policy to pass
 tests contains {
     "PolicyId": "MS.SHAREPOINT.3.2v1",
-    "Criticality": "Should",
+    "Criticality": "Shall",
     "Commandlet": ["Get-SPOTenant", "Get-PnPTenant"],
     "ActualValue": [FileLinkType, FolderLinkType],
     "ReportDetails": FileAndFolderPermission(FileLinkType, FolderLinkType),
@@ -322,7 +322,7 @@ tests contains {
 
 tests contains {
     "PolicyId": PolicyId,
-    "Criticality": "Should/Not-Implemented",
+    "Criticality": "Shall/Not-Implemented",
     "Commandlet": [],
     "ActualValue": [],
     "ReportDetails": NotCheckedDetails(PolicyId),
@@ -380,7 +380,7 @@ ExpirationTimersVerificationCode(TenantPolicy) := [ErrMsg, false] if {
 
 tests contains {
     "PolicyId": "MS.SHAREPOINT.3.3v1",
-    "Criticality": "Should",
+    "Criticality": "Shall",
     "Commandlet": ["Get-SPOTenant", "Get-PnPTenant"],
     "ActualValue": [
         TenantPolicy.SharingCapability,

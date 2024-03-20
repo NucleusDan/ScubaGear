@@ -1,5 +1,5 @@
 package utils.key
-import future.keywords
+import rego.v1
 import data.utils.report.ReportDetailsBoolean
 
 
@@ -58,7 +58,6 @@ ConvertToSetWithKey(Items, Key) := NewSet if {
 # Basic test that has anticipated string for Report Details
 TestResult(PolicyId, Output, ReportDetailString, RequirementMet) := true if {
     RuleOutput := [Result | some Result in Output; Result.PolicyId == PolicyId]
-
     count(RuleOutput) == 1
     RuleOutput[0].RequirementMet == RequirementMet
     RuleOutput[0].ReportDetails == ReportDetailString

@@ -1,26 +1,20 @@
-name: Run OPA Tests
+# Purpose: Run unit tests for OPA
+
+name: Unit Test OPA
+
+# This is a reusable workflow called by the pipeline.
 on:
-  # Run tests on each commit, newly opened/reopened PR, and
-  # PR review submission (e.g. approval)
+  workflow_call:
   workflow_dispatch:
-  push:
-    paths:
-      - "**.rego"
-      - "**/run_opa_tests.yaml"
-  pull_request:
-    types: [opened, reopened]
-    branches:
-      - "main"
-    paths:
-      - "**.rego"
-  pull_request_review:
-    types: [submitted]
 
 env:
   MODULE_ROOT: PowerShell/ScubaGear
 jobs:
-  Run-OPA-Tests:
+  opa-tests:
+    name: OPA Unit Tests
     runs-on: ubuntu-latest
+    # This condition prevents duplicate runs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -33,8 +27,8 @@ jobs:
       - name: Run OPA Tests
         run: opa test ${{ env.MODULE_ROOT }}/Rego/*.rego ${{ env.MODULE_ROOT }}/Rego/Utils/*.rego ${{ env.MODULE_ROOT }}/Testing/Unit/Rego/**/*.rego -v
       - name: Setup Regal
-        uses: StyraInc/setup-regal@v0.2.0
+        uses: StyraInc/setup-regal@v1.0.0
         with:
-          version: v0.11.0
+          version: v0.18.0
       - name: Run Regal Lint
         run: regal lint --format github ${{ env.MODULE_ROOT }}/Rego ${{ env.MODULE_ROOT }}/Testing

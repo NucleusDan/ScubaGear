@@ -1,5 +1,5 @@
 package utils.report
-import future.keywords
+import rego.v1
 import data.utils.key.PASS
 
 
@@ -11,6 +11,7 @@ default BASELINEVERSION := "main"
 
 BASELINEVERSION := input.module_version
 
+# regal ignore:line-length
 SCUBABASEURL := sprintf("https://github.com/cisagov/ScubaGear/blob/v%v/PowerShell/ScubaGear/baselines/", [BASELINEVERSION])
 
 ########################
@@ -43,6 +44,11 @@ NotCheckedDetails(PolicyId) := sprintf(
     [PolicyLink(PolicyId)]
 )
 
+# Note: Reason must include %v to reference policy in document.
+CheckedSkippedDetails(PolicyId, Reason) := sprintf(
+    concat(" ", [Reason]), [PolicyLink(PolicyId)]
+)
+
 # 3rd Party Report Details method
 DefenderMirrorDetails(PolicyId) := sprintf(
     concat(" ", [
@@ -63,18 +69,18 @@ ReportDetailsBoolean(true) := "Requirement met"
 ReportDetailsBoolean(false) := "Requirement not met"
 
 # Returns specified string if Status is false (good for error msg)
-ReportDetailsString(true, _) := PASS if {}
+ReportDetailsString(true, _) := PASS
 
-ReportDetailsString(false, String) := String if {}
+ReportDetailsString(false, String) := String
 
 # Returns string constructed from array if Status is false (good for error msg)
-ReportDetailsArray(true, _, _) := PASS if {}
+ReportDetailsArray(true, _, _) := PASS
 
 ReportDetailsArray(false, Array, String) := Description([
     ArraySizeStr(Array),
     String,
     concat(", ", Array)
-]) if {}
+])
 
 
 ################################################

@@ -12,7 +12,7 @@
 RootModule = './ScubaGear.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.0'
+ModuleVersion = '1.1.1'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -80,6 +80,9 @@ FunctionsToExport = @(
     'Invoke-RunCached',
     'Disconnect-SCuBATenant',
     'Copy-ScubaBaselineDocument',
+    'Install-OPA',
+    'Initialize-SCuBA',
+    'Debug-SCuBA',
     'Copy-ScubaSampleReport',
     'Copy-ScubaSampleConfigFile'
 )
