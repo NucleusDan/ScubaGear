@@ -1,7 +1,7 @@
 # ScubaGear <!-- omit in toc -->
 <p>
         <a href="https://github.com/cisagov/ScubaGear/releases" alt="ScubaGear version #">
-        <img src="https://img.shields.io/badge/ScubaGear-v1.1.1-%2328B953?labelColor=%23005288" /></a>
+        <img src="https://img.shields.io/badge/ScubaGear-v1.2.0-%2328B953?labelColor=%23005288" /></a>
 </p>
 
 Developed by CISA, ScubaGear is an assessment tool that verifies a Microsoft 365 (M365) tenant’s configuration conforms to the policies described in the Secure Cloud Business Applications ([SCuBA](https://cisa.gov/scuba)) Security Configuration Baseline [documents](https://github.com/cisagov/ScubaGear/tree/main/baselines).
@@ -52,7 +52,7 @@ If a tenant does not have the licenses listed above, the report will display a n
 To download ScubaGear:
 
 1. Click [here](https://github.com/cisagov/ScubaGear/releases/latest) to see the latest release.
-2. Click `ScubaGear-v1-1-1.zip` (or latest version) to download the release.
+2. Click `ScubaGear-v1-2-0.zip` (or latest version) to download the release.
 3. Extract the folder in the zip file.
 
 ### PowerShell Execution Policies
@@ -177,7 +177,7 @@ Invoke-SCuBA -M365Environment gcc -ConfigFilePath minimal_config.yaml
 ```
 
 **Typical Use** : config file `typical_config.yaml`
-Typical use includes multiple products, specified as a list, and an M365 environment variable. Note that additional product values are commented out and will not be included, but are retained in the config file to easily add them back later.
+Typical use includes multiple products, specified as a list, and an M365 environment variable. Note that additional product values are commented out and will not be included, but are retained in the config file to easily add them back later. ScubaGear's Support module also has functionality to generate an empty sample config file. Runnning the `New-Config` Cmdlet will generate a full sample config called `SampleConfig.yaml` that can be filled out based on the guidance below. Also parameters can be passed to the `New-Config` Cmdlet to change values inside the sample config.
 ```
 Description: YAML Typical Config ( multiple products )
 ProductNames:
